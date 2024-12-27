@@ -1,0 +1,64 @@
+import networkx as nx
+import matplotlib.pyplot as plt
+from itertools import permutations
+
+# Создаем граф
+G = nx.Graph()
+
+# Добавляем узлы и рёбра с расстояниями
+edges = [
+    ("A", "B", 10),
+    ("A", "C", 20),
+    ("B", "D", 15),
+    ("C", "D", 30),
+    ("D", "E", 25),
+    ("B", "C", 35),
+    ("A", "E", 50)
+]
+G.add_weighted_edges_from(edges)
+
+# Узлы графа
+nodes = list(G.nodes())
+
+# Решение задачи коммивояжера методом полного перебора
+def solve_tsp_bruteforce(G, nodes):
+    min_distance = float("inf")
+    best_path = None
+
+    # Перебираем все возможные перестановки узлов (кроме первого, который фиксируем как стартовый)
+    for perm in permutations(nodes[1:]):
+        path = [nodes[0]] + list(perm) + [nodes[0]]  # Путь начинается и заканчивается в стартовом узле
+        distance = 0
+
+        # Вычисляем длину пути
+        try:
+            for i in range(len(path) - 1):
+                distance += G[path[i]][path[i + 1]]['weight']
+        except KeyError:
+            continue  # Пропускаем пути, где отсутствуют рёбра
+
+        if distance < min_distance:
+            min_distance = distance
+            best_path = path
+
+    return best_path, min_distance
+
+# Решаем задачу коммивояжера
+best_path, min_distance = solve_tsp_bruteforce(G, nodes)
+
+# Вывод результатов
+print("Лучший маршрут:", best_path)
+print("Минимальная длина маршрута:", min_distance)
+
+# Визуализация графа
+pos = nx.spring_layout(G)
+nx.draw(G, pos, with_labels=True, node_size=700, node_color='lightblue')
+edge_labels = nx.get_edge_attributes(G, 'weight')
+nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
+
+# Выделение пути
+if best_path:
+    path_edges = list(zip(best_path, best_path[1:]))
+    nx.draw_networkx_edges(G, pos, edgelist=path_edges, edge_color='red', width=2)
+
+plt.show()
